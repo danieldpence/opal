@@ -7,20 +7,28 @@ class File < IO
 
   class << self
     def expand_path(path, basedir = nil)
-      path = [basedir, path].compact.join(SEPARATOR)
-      parts = path.split(SEPARATOR)
+      sep = SEPARATOR
+      path = [basedir, path].compact.join(sep) unless path.start_with?(sep)
+      parts = path.split(sep)
+      absolute = path.start_with?(sep)
       new_parts = []
-      parts[0] = Dir.home if parts.first == '~'
-      parts[0] = Dir.pwd if parts.first == '.'
+
+      unless absolute
+        if parts.first == '~'
+          new_parts << Dir.home
+        else
+          new_parts << Dir.pwd
+        end
+      end
 
       parts.each do |part|
         if part == '..'
           new_parts.pop
         else
-          new_parts << part
+          new_parts << part unless part == '.'
         end
       end
-      new_parts.join(SEPARATOR)
+      new_parts.join(sep)
     end
     alias realpath expand_path
 
